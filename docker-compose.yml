@@ -1,0 +1,93 @@
+version: "3.6"
+
+services:
+
+  traefik:
+    image: traefik:v1.5.1-alpine
+    command:
+      - --api
+      - --docker
+      - --docker.watch
+      - --docker.constraints=tag==web
+      - --entryPoints=Name:http Address::80 Compress::true
+      - --defaultEntryPoints=http
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+      - /dev/null:/traefik.toml:rw
+    links:
+      - app
+      - hub
+    ports:
+      - "80:80"
+      - "8080:8080"
+      - "443:443"
+
+  app:
+    image: asyncy/platform-app
+    labels:
+      - "traefik.tags=web"
+      - "traefik.backend=app"
+      - "traefik.port=5000"
+      - "traefik.frontend.rule=Host: app.asyncy.com"
+    ports:
+      - "5000"
+    env_file:
+      - asyncy.env
+    volumes:
+      - ./github.pem:/github.pem:r
+
+  hub:
+    image: asyncy/platform-hub
+    labels:
+      - "traefik.tags=web"
+      - "traefik.backend=hub"
+      - "traefik.port=5000"
+      - "traefik.frontend.rule=Host: hub.asyncy.com"
+    ports:
+      - "5000"
+    env_file:
+      - asyncy.env
+    volumes:
+      - ./github.pem:/github.pem:r
+
+  engine:
+    image: asyncy/platform-engine
+    volumes:
+      - shared:/shared
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+    links:
+      - postgres
+      - rabbitmq
+      - mongodb
+    depends_on:
+      - postgres
+      - rabbitmq
+      - mongodb
+
+  postgres:
+    image: postgres:10.3-alpine
+    volumes:
+      - postgres-volume:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3.7.3-alpine
+    volumes:
+      - rabbitmq-volume:/var/lib/rabbitmq
+
+  mongodb:
+    image: mongo:3.6.3
+    command: mongod --smallfiles --logpath=/dev/null
+    environment:
+      # - MONGO_DATA_DIR=/data/db
+      # - MONGO_LOG_DIR=/dev/null
+      - MONGODB_USER=admin
+      - MONGODB_PASS=admin
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb-volume:/data/db
+
+volumes:
+  postgres-volume:
+  rabbitmq-volume:
+  mongodb-volume:
