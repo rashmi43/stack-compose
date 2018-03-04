@@ -1,7 +1,10 @@
-version: "3.6"
+version: "3"
 
 services:
 
+  ###
+  # Frontend
+  ###
   traefik:
     image: traefik:v1.5.1-alpine
     command:
@@ -14,53 +17,110 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
       - /dev/null:/traefik.toml:rw
-    links:
-      - app
-      - hub
     ports:
       - "80:80"
-      - "8080:8080"
+      - "8080:8080"  # Traefik Frontend
       - "443:443"
 
   app:
-    image: asyncy/platform-app
+    # image: asyncy/platform-app
+    image: trinitronx/python-simplehttpserver
     labels:
       - "traefik.tags=web"
       - "traefik.backend=app"
-      - "traefik.port=5000"
-      - "traefik.frontend.rule=Host: app.asyncy.com"
+      - "traefik.port=8080"
+      - "traefik.frontend.rule=Host: app.${DNS}"
     ports:
-      - "5000"
+      - "8080"
     env_file:
       - asyncy.env
     volumes:
-      - ./github.pem:/github.pem:r
+      - ./github.pem:/github.pem:ro
+      - ./mock/app:/var/www
 
   hub:
-    image: asyncy/platform-hub
+    # image: asyncy/platform-hub
+    image: trinitronx/python-simplehttpserver
     labels:
       - "traefik.tags=web"
       - "traefik.backend=hub"
-      - "traefik.port=5000"
-      - "traefik.frontend.rule=Host: hub.asyncy.com"
+      - "traefik.port=8080"
+      - "traefik.frontend.rule=Host: hub.${DNS}"
     ports:
-      - "5000"
+      - "8080"
     env_file:
       - asyncy.env
     volumes:
-      - ./github.pem:/github.pem:r
+      - ./github.pem:/github.pem:ro
+      - ./mock/hub:/var/www
+
+  api:
+    # image: asyncy/platform-api
+    # command: server --public
+    image: trinitronx/python-simplehttpserver
+    labels:
+      - "traefik.tags=web"
+      - "traefik.backend=api"
+      - "traefik.port=8080"
+      - "traefik.frontend.rule=Host: api.${DNS}"
+    ports:
+      - "8080"
+    env_file:
+      - asyncy.env
+    volumes:
+      - ./github.pem:/github.pem:ro
+      - ./mock/api:/var/www
+    links:
+      - postgres
+      - mongodb
+      - rabbitmq
+
+  ###
+  # Management
+  ###
+  metabase:
+    image: metabase/metabase
+    labels:
+      - "traefik.tags=web"
+      - "traefik.backend=metabase"
+      - "traefik.port=3000"
+      - "traefik.frontend.rule=Host: metabase.${DNS}"
+    ports:
+      - "3000"
+    links:
+      - postgres
+      - mongodb
+      - rabbitmq
+    volumes:
+      - metabase-volume:/metabase-data
+
+  ###
+  # Backend
+  ###
+  api-private:
+    # image: asyncy/platform-api
+    # command: server --private
+    image: trinitronx/python-simplehttpserver
+    ports:
+      - "8080"
+    volumes:
+      - ./github.pem:/github.pem:ro
+      - ./mock/api-private:/var/www
+    links:
+      - postgres
+      - mongodb
+      - rabbitmq
 
   engine:
     image: asyncy/platform-engine
     volumes:
-      - shared:/shared
       - /var/run/docker.sock:/var/run/docker.sock:rw
     links:
-      - postgres
+      - api-private
       - rabbitmq
       - mongodb
     depends_on:
-      - postgres
+      - api-private
       - rabbitmq
       - mongodb
 
@@ -91,3 +151,4 @@ volumes:
   postgres-volume:
   rabbitmq-volume:
   mongodb-volume:
+  metabase-volume:
