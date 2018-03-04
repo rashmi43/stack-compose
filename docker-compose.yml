@@ -1,4 +1,4 @@
-version: "3"
+version: "3.5"
 
 services:
 
@@ -54,13 +54,13 @@ services:
       - ./github.pem:/github.pem:ro
       - ./mock/hub:/var/www
 
-  api:
-    # image: asyncy/platform-api
+  api-rest:
+    # image: asyncy/platform-api-rest
     # command: server --public
     image: trinitronx/python-simplehttpserver
     labels:
       - "traefik.tags=web"
-      - "traefik.backend=api"
+      - "traefik.backend=api-rest"
       - "traefik.port=8080"
       - "traefik.frontend.rule=Host: api.${DNS}"
     ports:
@@ -69,11 +69,29 @@ services:
       - asyncy.env
     volumes:
       - ./github.pem:/github.pem:ro
-      - ./mock/api:/var/www
+      - ./mock/api-rest:/var/www
     links:
       - postgres
       - mongodb
       - rabbitmq
+
+  api-graphql:
+    # image: asyncy/platform-api-graphql
+    # command: server --public
+    image: trinitronx/python-simplehttpserver
+    labels:
+      - "traefik.tags=web"
+      - "traefik.backend=api-graphql"
+      - "traefik.port=8080"
+      - "traefik.frontend.rule=Host: api.${DNS}; PathPrefix: /graphql"
+    ports:
+      - "8080"
+    env_file:
+      - asyncy.env
+    volumes:
+      - ./mock/api-graphql:/var/www
+    links:
+      - postgres
 
   ###
   # Management
@@ -98,7 +116,7 @@ services:
   # Backend
   ###
   api-private:
-    # image: asyncy/platform-api
+    # image: asyncy/platform-api-rest
     # command: server --private
     image: trinitronx/python-simplehttpserver
     ports:
@@ -115,6 +133,10 @@ services:
     image: asyncy/platform-engine
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
+    environment:
+      broker: amqp://rabbitmq:@rabbitmq:5672//
+      database: postgres://postgres:@postgres:5432/postgres
+      mongo: mongodb://mongo:27017
     links:
       - api-private
       - rabbitmq
@@ -142,8 +164,6 @@ services:
       # - MONGO_LOG_DIR=/dev/null
       - MONGODB_USER=admin
       - MONGODB_PASS=admin
-    ports:
-      - 27017:27017
     volumes:
       - mongodb-volume:/data/db
 
