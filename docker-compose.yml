@@ -128,7 +128,6 @@ services:
     ports:
       - "8080"
     volumes:
-      - ./github.pem:/github.pem:ro
       - ./mock/api-private:/var/www
     links:
       - postgres
