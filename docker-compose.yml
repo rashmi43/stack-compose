@@ -32,10 +32,7 @@ services:
       - "traefik.frontend.rule=Host: app.${DNS}"
     ports:
       - "8080"
-    env_file:
-      - asyncy.env
     volumes:
-      - ./github.pem:/github.pem:ro
       - ./mock/app:/var/www
 
   hub:
@@ -48,11 +45,24 @@ services:
       - "traefik.frontend.rule=Host: hub.${DNS}"
     ports:
       - "8080"
-    env_file:
-      - asyncy.env
     volumes:
-      - ./github.pem:/github.pem:ro
       - ./mock/hub:/var/www
+
+  bootstrap:
+    # image: asyncy/platform-bootstrap
+    image: trinitronx/python-simplehttpserver
+    labels:
+      - "traefik.tags=web"
+      - "traefik.backend=bootstrap"
+      - "traefik.port=8080"
+    ports:
+      - "8080"
+    volumes:
+      - ./mock/bootstrap:/var/www
+    links:
+      - metabase
+      - postgres
+      # - grafana
 
   api-rest:
     # image: asyncy/platform-api-rest
@@ -65,10 +75,7 @@ services:
       - "traefik.frontend.rule=Host: api.${DNS}"
     ports:
       - "8080"
-    env_file:
-      - asyncy.env
     volumes:
-      - ./github.pem:/github.pem:ro
       - ./mock/api-rest:/var/www
     links:
       - postgres
@@ -86,8 +93,6 @@ services:
       - "traefik.frontend.rule=Host: api.${DNS}; PathPrefix: /graphql"
     ports:
       - "8080"
-    env_file:
-      - asyncy.env
     volumes:
       - ./mock/api-graphql:/var/www
     links:
@@ -128,12 +133,14 @@ services:
       - postgres
       - mongodb
       - rabbitmq
+    depends_on:
+      - postgres
 
   engine:
     image: asyncy/platform-engine
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
-    environment:
+    environment:  # [TODO] remove if @jacoco set to default
       broker: amqp://rabbitmq:rabbitmq@rabbitmq:5672//
       database: postgres://postgres:@postgres:5432/postgres
       mongo: mongodb://mongo:27017
