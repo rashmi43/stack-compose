@@ -55,6 +55,7 @@ services:
       - "traefik.tags=web"
       - "traefik.backend=bootstrap"
       - "traefik.port=8080"
+      - "traefik.frontend.rule=Host: ${DNS}"
     ports:
       - "8080"
     volumes:
