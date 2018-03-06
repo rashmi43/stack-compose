@@ -29,7 +29,7 @@ services:
       - "traefik.tags=web"
       - "traefik.backend=app"
       - "traefik.port=8080"
-      - "traefik.frontend.rule=Host: app.${DNS}"
+      - "traefik.frontend.rule=Host: app.${DNS:-asyncy.net}"
     ports:
       - "8080"
     volumes:
@@ -42,7 +42,7 @@ services:
       - "traefik.tags=web"
       - "traefik.backend=hub"
       - "traefik.port=8080"
-      - "traefik.frontend.rule=Host: hub.${DNS}"
+      - "traefik.frontend.rule=Host: hub.${DNS:-asyncy.net}"
     ports:
       - "8080"
     volumes:
@@ -55,7 +55,7 @@ services:
       - "traefik.tags=web"
       - "traefik.backend=bootstrap"
       - "traefik.port=8080"
-      - "traefik.frontend.rule=Host: ${DNS}"
+      - "traefik.frontend.rule=Host: ${DNS:-asyncy.net}"
     ports:
       - "8080"
     volumes:
@@ -73,7 +73,7 @@ services:
       - "traefik.tags=web"
       - "traefik.backend=api-rest"
       - "traefik.port=8080"
-      - "traefik.frontend.rule=Host: api.${DNS}"
+      - "traefik.frontend.rule=Host: api.${DNS:-asyncy.net}"
     ports:
       - "8080"
     volumes:
@@ -91,7 +91,7 @@ services:
       - "traefik.tags=web"
       - "traefik.backend=api-graphql"
       - "traefik.port=8080"
-      - "traefik.frontend.rule=Host: api.${DNS}; PathPrefix: /graphql"
+      - "traefik.frontend.rule=Host: api.${DNS:-asyncy.net}; PathPrefix: /graphql"
     ports:
       - "8080"
     volumes:
@@ -108,7 +108,7 @@ services:
       - "traefik.tags=web"
       - "traefik.backend=metabase"
       - "traefik.port=3000"
-      - "traefik.frontend.rule=Host: metabase.${DNS}"
+      - "traefik.frontend.rule=Host: metabase.${DNS:-asyncy.net}"
     ports:
       - "3000"
     links:

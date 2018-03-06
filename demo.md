@@ -91,3 +91,5 @@ POST http://api/apps/:id/stories/:story/narrations
 1. make a request to the hub
   - http://api/apps/1/stories/app.story
 2. Parse the `containers
+
+# custom registry: docker pull registry.hub.docker.com/library/alpine
