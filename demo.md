@@ -8,6 +8,7 @@ alpine echo "hello {{name}}"
 
 GET http://api/apps/:id/stories/:story
 
+```json
 {
   "tree": {"story compiled tree"},
   "repository": {
@@ -31,23 +32,25 @@ GET http://api/apps/:id/stories/:story
     }
   }
 }
+```
 
 # Run the story
 
 POST http://api/apps/:id/stories/:story/narrations
+
+```json
 {
   "start": "starting time",
   "end": "end time",
   "status": "ok"
 }
+```
 
-
----------------------------------------------------------------
----------------------------------------------------------------
----------------------------------------------------------------
+---
 
 # Example 1
 
+```json
 {
   "tree": {
     "version": "0.0.6",
@@ -87,9 +90,14 @@ POST http://api/apps/:id/stories/:story/narrations
     }
   }
 }
+```
 
 1. make a request to the hub
   - http://api/apps/1/stories/app.story
 2. Parse the `containers
 
-# custom registry: docker pull registry.hub.docker.com/library/alpine
+# custom registry
+
+```
+docker pull registry.hub.docker.com/library/alpine
+```
