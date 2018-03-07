@@ -21,6 +21,8 @@ services:
       - "80:80"
       - "8080:8080"  # Traefik Frontend
       - "443:443"
+    networks:
+      - "stack"
 
   app:
     # image: asyncy/platform-app
@@ -34,6 +36,8 @@ services:
       - "8080"
     volumes:
       - ./mock/app:/var/www
+    networks:
+      - "stack"
 
   hub:
     # image: asyncy/platform-hub
@@ -47,6 +51,8 @@ services:
       - "8080"
     volumes:
       - ./mock/hub:/var/www
+    networks:
+      - "stack"
 
   bootstrap:
     # image: asyncy/platform-bootstrap
@@ -60,10 +66,8 @@ services:
       - "8080"
     volumes:
       - ./mock/bootstrap:/var/www
-    links:
-      - metabase
-      - postgres
-      # - grafana
+    networks:
+      - "stack"
 
   api-rest:
     # image: asyncy/platform-api-rest
@@ -78,10 +82,8 @@ services:
       - "8080"
     volumes:
       - ./mock/api-rest:/var/www
-    links:
-      - postgres
-      - mongodb
-      - rabbitmq
+    networks:
+      - "stack"
 
   api-graphql:
     # image: asyncy/platform-api-graphql
@@ -96,8 +98,8 @@ services:
       - "8080"
     volumes:
       - ./mock/api-graphql:/var/www
-    links:
-      - postgres
+    networks:
+      - "stack"
 
   ###
   # Management
@@ -111,12 +113,10 @@ services:
       - "traefik.frontend.rule=Host: metabase.${DNS:-asyncy.net}"
     ports:
       - "3000"
-    links:
-      - postgres
-      - mongodb
-      - rabbitmq
     volumes:
       - metabase-volume:/metabase-data
+    networks:
+      - "stack"
 
   ###
   # Backend
@@ -128,13 +128,12 @@ services:
     ports:
       - "8080"
     volumes:
+      - ./github.pem:/github.pem:ro
       - ./mock/api-private:/var/www
-    links:
-      - postgres
-      - mongodb
-      - rabbitmq
     depends_on:
       - postgres
+    networks:
+      - "stack"
 
   engine:
     image: asyncy/platform-engine
@@ -144,19 +143,19 @@ services:
       broker: amqp://rabbitmq:rabbitmq@rabbitmq:5672//
       database: postgres://postgres:@postgres:5432/postgres
       mongo: mongodb://mongo:27017
-    links:
-      - api-private
-      - rabbitmq
-      - mongodb
     depends_on:
       - api-private
       - rabbitmq
       - mongodb
+    networks:
+      - "stack"
 
   postgres:
     image: postgres:10.3-alpine
     volumes:
       - postgres-volume:/var/lib/postgresql/data
+    networks:
+      - "stack"
 
   rabbitmq:
     image: rabbitmq:3.7.3-alpine
@@ -165,6 +164,8 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=rabbitmq
       - RABBITMQ_DEFAULT_PASS=rabbitmq
+    networks:
+      - "stack"
 
   mongodb:
     image: mongo:3.6.3
@@ -176,9 +177,73 @@ services:
       - MONGODB_PASS=admin
     volumes:
       - mongodb-volume:/data/db
+    networks:
+      - "stack"
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000"
+    labels:
+      - "traefik.tags=web"
+      - "traefik.backend=grafana"
+      - "traefik.port=3000"
+      - "traefik.frontend.rule=Host: grafana.${DNS:-asyncy.net}"
+    networks:
+      - "stack"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.2.1
+    environment:
+      - "http.host=0.0.0.0"
+      - "transport.host=127.0.0.1"
+      - "ELASTIC_PASSWORD=admin"
+    ports:
+      - "9200"
+    volumes:
+      - elasticsearch-volume:/usr/share/elasticsearch/data
+    networks:
+      - "stack"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.2.1
+    container_name: kibana
+    environment:
+      - "ELASTICSEARCH_USERNAME=kibana"
+      - "ELASTICSEARCH_PASSWORD=admin"
+    ports:
+      - "5601"
+    labels:
+      - "traefik.tags=web"
+      - "traefik.backend=kibana"
+      - "traefik.port=5601"
+      - "traefik.frontend.rule=Host: kibana.${DNS:-asyncy.net}"
+    networks:
+      - "stack"
+
+  # TODO: merge into bootstrap
+  setup_kibana:
+    image: centos:7
+    environment:
+      - "ELASTIC_PASSWORD=admin"
+    depends_on:
+      - elasticsearch
+    volumes:
+      - ./scripts/setup-kibana.sh:/usr/local/bin/setup-kibana.sh:ro
+    command: ['/bin/bash', '-c', 'cat /usr/local/bin/setup-kibana.sh | tr -d "\r" | bash']
+    networks:
+      - "stack"
+
+  fluentd:
+    image: fluent/fluentd
+    networks:
+      - "stack"
 
 volumes:
   postgres-volume:
   rabbitmq-volume:
   mongodb-volume:
   metabase-volume:
+  elasticsearch-volume:
+
+networks: {stack: {}}
