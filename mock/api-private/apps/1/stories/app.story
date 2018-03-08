@@ -1,4 +1,5 @@
 {
+  "filename": "app.story",
   "tree": {
     "version": "0.0.6",
     "script": {
@@ -30,10 +31,13 @@
   "environment": {
     "name": "Asyncy"
   },
-  "filename": "app.story",
   "containers": {
-    "alpine" {
+    "alpine": {
       "pull_url": "registry.hub.docker.com/library/alpine"
     }
-  }
+  },
+  "repository": {
+    "url": "https://github.com/asyncy/stack-compose.git"
+  },
+  "version": null
 }
