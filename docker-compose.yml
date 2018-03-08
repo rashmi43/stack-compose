@@ -177,58 +177,8 @@ services:
     volumes:
       - mongodb-volume:/data/db
 
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000"
-    labels:
-      - "traefik.tags=web"
-      - "traefik.backend=grafana"
-      - "traefik.port=3000"
-      - "traefik.frontend.rule=Host: grafana.${DNS:-asyncy.net}"
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.2.1
-    environment:
-      - "http.host=0.0.0.0"
-      - "transport.host=127.0.0.1"
-      - "ELASTIC_PASSWORD=admin"
-    ports:
-      - "9200"
-    volumes:
-      - elasticsearch-volume:/usr/share/elasticsearch/data
-
-  kibana:
-    image: docker.elastic.co/kibana/kibana:6.2.1
-    container_name: kibana
-    environment:
-      - "ELASTICSEARCH_USERNAME=kibana"
-      - "ELASTICSEARCH_PASSWORD=admin"
-    ports:
-      - "5601"
-    labels:
-      - "traefik.tags=web"
-      - "traefik.backend=kibana"
-      - "traefik.port=5601"
-      - "traefik.frontend.rule=Host: kibana.${DNS:-asyncy.net}"
-
-  # TODO: merge into bootstrap
-  setup_kibana:
-    image: centos:7
-    environment:
-      - "ELASTIC_PASSWORD=admin"
-    depends_on:
-      - elasticsearch
-    volumes:
-      - ./scripts/setup-kibana.sh:/usr/local/bin/setup-kibana.sh:ro
-    command: ['/bin/bash', '-c', 'cat /usr/local/bin/setup-kibana.sh | tr -d "\r" | bash']
-
-  fluentd:
-    image: fluent/fluentd
-
 volumes:
   postgres-volume:
   rabbitmq-volume:
   mongodb-volume:
   metabase-volume:
-  elasticsearch-volume:
