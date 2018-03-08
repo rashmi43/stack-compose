@@ -7,6 +7,6 @@
 docker-compose up -d
 ```
 
-4. Navigate to
+Then navigate to
 
 http://asyncy.net
