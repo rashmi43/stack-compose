@@ -140,10 +140,6 @@ services:
     image: asyncy/platform-engine
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
-    environment:  # [TODO] remove if @jacoco set to default
-      broker: amqp://rabbitmq:rabbitmq@rabbitmq:5672//
-      database: postgres://postgres:@postgres:5432/postgres
-      mongo: mongodb://mongo:27017
     depends_on:
       - api-private
       - rabbitmq
