@@ -33,7 +33,8 @@
   },
   "containers": {
     "alpine": {
-      "pull_url": "registry.hub.docker.com/library/alpine"
+      "pull_url": "registry.hub.docker.com/library/alpine",
+      "real_name": "alpine"
     }
   },
   "repository": {
