@@ -34,7 +34,15 @@
   "containers": {
     "alpine": {
       "pull_url": "registry.hub.docker.com/library/alpine",
-      "real_name": "alpine"
+      "real_name": "alpine",
+      "commands": {
+        "echo": {
+            "help": "Echoes strings",
+            "args": {
+                "string": "string"
+            }
+        }
+      }
     }
   },
   "repository": {
