@@ -26,19 +26,19 @@
     }
   },
   "environment": {
-      "CONSUMER_KEY": "fdLh6XQiIYmw2GyAHNJomuGTS",
-      "CONSUMER_SECRET": "rqdUjE6omjBcvCKtB6X1htVj2N72rmCZ5IDjNWoFAf0RoTN3d9",
-      "ACCESS_TOKEN": "2615569908-IixyTd1TpMeD3oEMPlhBFXiktTQDayY7DEg6Y14",
-      "ACESS_TOKEN_SECRET" : "akqD6I6jJ9ALA4nF7UI3Gj0Bocvw7fbnBAxYzGzYWlvCl"
+    "CONSUMER_KEY": "",
+    "CONSUMER_SECRET": "",
+    "ACCESS_TOKEN": "",
+    "ACESS_TOKEN_SECRET" : ""
   },
   "containers": {
     "twitter": {
       "pull_url": "asyncy/asyncy-twitter",
       "commands": {
         "tweet": {
-            "arguments": [
-                {"type": "string"}
-            ]
+            "args": {
+                "message": "string"
+            }
         }
       }
     }
