@@ -1,30 +1,35 @@
 {
   "filename": "app.story",
   "tree": {
-    "version": "0.0.6",
+    "version": "0.0.8",
     "script": {
       "1": {
-        "container": "alpine",
+        "method": "run",
         "ln": "1",
+        "output": null,
+        "container": "alpine",
         "args": [
-          "echo",
           {
+            "$OBJECT": "path",
+            "paths": [
+              "echo"
+            ]
+          },
+          {
+            "$OBJECT": "string",
             "values": [
               {
+                "$OBJECT": "path",
                 "paths": [
                   "name"
-                ],
-                "$OBJECT": "path"
+                ]
               }
             ],
-            "string": "Hi, I am {}!",
-            "$OBJECT": "string"
+            "string": "Hi, I am {}!"
           }
         ],
-        "exit": null,
         "enter": null,
-        "output": null,
-        "method": "run"
+        "exit": null
       }
     }
   },
@@ -34,12 +39,11 @@
   "containers": {
     "alpine": {
       "pull_url": "registry.hub.docker.com/library/alpine",
-      "real_name": "alpine",
       "commands": {
         "echo": {
             "help": "Echoes strings",
             "args": {
-                "string": "string"
+                "message": "string"
             }
         }
       }
