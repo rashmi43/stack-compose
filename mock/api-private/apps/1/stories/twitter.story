@@ -36,9 +36,9 @@
       "pull_url": "asyncy/asyncy-twitter",
       "commands": {
         "tweet": {
-            "args": {
-                "message": "string"
-            }
+            "arguments": [
+                {"type": "string"}
+            ]
         }
       }
     }
