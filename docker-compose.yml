@@ -165,6 +165,10 @@ services:
       - api-private
       - rabbitmq
       - mongodb
+    environment:
+      - logger_name=asyncy
+      - logger_level=warning
+      - logdna_key=ingestion_key
 
   postgres:
     image: postgres:10.3-alpine
