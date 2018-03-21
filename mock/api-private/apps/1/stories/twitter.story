@@ -25,11 +25,14 @@
       }
     }
   },
+  "context": {},
   "environment": {
-    "CONSUMER_KEY": "",
-    "CONSUMER_SECRET": "",
-    "ACCESS_TOKEN": "",
-    "ACESS_TOKEN_SECRET" : ""
+    "twitter": {
+        "CONSUMER_KEY": "",
+        "CONSUMER_SECRET": "",
+        "ACCESS_TOKEN": "",
+        "ACESS_TOKEN_SECRET" : ""
+    }
   },
   "containers": {
     "twitter": {
