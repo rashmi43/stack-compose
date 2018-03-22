@@ -55,6 +55,9 @@ services:
       - "traefik.frontend.rule=Host: netlify.${DNS:-asyncy.net}"
     ports:
       - "5000"
+    environment:
+      STORY: ci.story 2 2
+      FLASK_DEBUG: 1
     volumes:
       - /usr/bin/docker:/usr/local/bin/docker
       - /var/run/docker.sock:/var/run/docker.sock:rw
