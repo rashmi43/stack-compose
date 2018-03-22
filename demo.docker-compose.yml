@@ -38,6 +38,7 @@ services:
       LOGDNA_TOKEN: 7304571iz6v5bxnqyux7
       SAVE_TO: /var/www/apps/1/stories
       DOCS_URL: https://asyncy.github.io/docs.asyncy.com/
+      FLASK_DEBUG: 1
     volumes:
       - ./mock/api-private:/var/www
       - /usr/bin/docker:/usr/local/bin/docker
