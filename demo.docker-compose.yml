@@ -1,0 +1,115 @@
+version: "3.5"
+
+services:
+
+  ###
+  # Frontend
+  ###
+  traefik:
+    image: traefik:v1.5.1-alpine
+    command:
+      - --api
+      - --docker
+      - --docker.watch
+      - --docker.constraints=tag==web
+      - --entryPoints=Name:http Address::80 Compress::true
+      - --entryPoints=Name:https Address::443 TLS:/etc/letsencrypt/live/demo.asyncy.com/fullchain.pem,/etc/letsencrypt/live/demo.asyncy.com/privkey.pem Compress::true
+      - --defaultEntryPoints=http,https
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+      - /dev/null:/traefik.toml:rw
+      - /etc/letsencrypt/:/etc/letsencrypt/
+    ports:
+      - "80:80"
+      - "8080:8080"  # Traefik Frontend
+      - "443:443"
+
+  demo:
+    image: asyncy/demo.asyncy.com
+    labels:
+      - "traefik.tags=web"
+      - "traefik.backend=demo"
+      - "traefik.port=5000"
+      - "traefik.frontend.rule=Host: demo.${DNS:-asyncy.net}"
+      - "traefik.frontend.headers.SSLRedirect=true"
+    ports:
+      - "5000"
+    environment:
+      LOGDNA_TOKEN: 7304571iz6v5bxnqyux7
+      SAVE_TO: /var/www/apps/1/stories
+      DOCS_URL: https://asyncy.github.io/docs.asyncy.com/
+    volumes:
+      - ./mock/api-private:/var/www
+      - /usr/bin/docker:/usr/local/bin/docker
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+
+  ###
+  # Mocked asyncy-webhooks container for demo
+  ###
+  netlify:
+    image: asyncy/mock-asyncy-webhooks
+    labels:
+      - "traefik.tags=web"
+      - "traefik.backend=mock"
+      - "traefik.port=5000"
+      - "traefik.frontend.rule=Host: netlify.${DNS:-asyncy.net}"
+    ports:
+      - "5000"
+    volumes:
+      - /usr/bin/docker:/usr/local/bin/docker
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+
+  ###
+  # Backend
+  ###
+  api-private:
+    # image: asyncy/platform-api-rest
+    # command: server --private
+    image: trinitronx/python-simplehttpserver
+    ports:
+      - "8080"
+    volumes:
+      - ./github.pem:/github.pem:ro
+      - ./mock/api-private:/var/www
+    links:
+      - mongodb
+      - rabbitmq
+
+  engine:
+    image: asyncy/platform-engine
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+    depends_on:
+      - api-private
+      - rabbitmq
+      - mongodb
+    links:
+      - api-private
+      - rabbitmq
+      - mongodb
+    environment:
+        logger_name: 'root'
+        logger_level: 'debug'
+
+  rabbitmq:
+    image: rabbitmq:3.7.3-alpine
+    volumes:
+      - rabbitmq-volume:/var/lib/rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=rabbitmq
+      - RABBITMQ_DEFAULT_PASS=rabbitmq
+
+  mongodb:
+    image: mongo:3.6.3
+    command: mongod --smallfiles --logpath=/dev/null
+    environment:
+      # - MONGO_DATA_DIR=/data/db
+      # - MONGO_LOG_DIR=/dev/null
+      - MONGODB_USER=admin
+      - MONGODB_PASS=admin
+    volumes:
+      - mongodb-volume:/data/db
+
+volumes:
+  rabbitmq-volume:
+  mongodb-volume:
