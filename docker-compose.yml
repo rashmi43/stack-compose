@@ -194,6 +194,20 @@ services:
     volumes:
       - mongodb-volume:/data/db
 
+  docker-graphite-statsd:
+    image: graphiteapp/docker-graphite-statsd:DZ-0.10-1.1.2
+    labels:
+      - "traefik.tags=web"
+      - "traefik.backend=graphite"
+      - "traefik.port=8080"
+      - "traefik.frontend.rule=Host: graphite.${DNS:-asyncy.net}"
+    ports:
+      - "80"
+      - "2003-2004"
+      - "2023-2024"
+      - "8125/udp"
+      - "8126"
+
 volumes:
   postgres-volume:
   rabbitmq-volume:
