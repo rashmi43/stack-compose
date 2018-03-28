@@ -182,7 +182,7 @@ services:
     labels:
       - "traefik.tags=web"
       - "traefik.backend=graphite"
-      - "traefik.port=8080"
+      - "traefik.port=80"
       - "traefik.frontend.rule=Host: graphite.${DNS:-asyncy.net}"
     ports:
       - "80"
