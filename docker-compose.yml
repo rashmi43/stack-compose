@@ -177,7 +177,7 @@ services:
     volumes:
       - mongodb-volume:/data/db
 
-  docker-graphite-statsd:
+  graphite-statsd:
     image: graphiteapp/docker-graphite-statsd:DZ-0.10-1.1.2
     labels:
       - "traefik.tags=web"
