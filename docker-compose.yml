@@ -22,23 +22,6 @@ services:
       - "8080:8080"  # Traefik Frontend
       - "443:443"
 
-  demo:
-    image: asyncy/demo
-    labels:
-      - "traefik.tags=web"
-      - "traefik.backend=demo"
-      - "traefik.port=5000"
-      - "traefik.frontend.rule=Host: demo.${DNS:-asyncy.net}"
-    environment:
-      LOGDNA_TOKEN: ${LOGDNA_TOKEN}
-      STORY_DATA: /var/www/story.json   # default data to add story to
-    ports:
-      - "5000"
-    volumes:
-      - ./mock/api-private:/var/www
-      - /usr/bin/docker:/usr/local/bin/docker
-      - /var/run/docker.sock:/var/run/docker.sock:rw
-
   app:
     # image: asyncy/platform-app
     image: trinitronx/python-simplehttpserver
@@ -193,6 +176,20 @@ services:
       - MONGODB_PASS=admin
     volumes:
       - mongodb-volume:/data/db
+
+  graphite-statsd:
+    image: graphiteapp/docker-graphite-statsd:DZ-0.10-1.1.2
+    labels:
+      - "traefik.tags=web"
+      - "traefik.backend=graphite"
+      - "traefik.port=80"
+      - "traefik.frontend.rule=Host: graphite.${DNS:-asyncy.net}"
+    ports:
+      - "80"
+      - "2003-2004"
+      - "2023-2024"
+      - "8125/udp"
+      - "8126"
 
 volumes:
   postgres-volume:
