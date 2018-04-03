@@ -14,6 +14,9 @@ services:
       - --docker.constraints=tag==web
       - --entryPoints=Name:http Address::80 Compress::true
       - --defaultEntryPoints=http
+      - --metrics
+      - --metrics.statsd
+      - --metrics.statsd.address=statsd:8125
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
       - /dev/null:/traefik.toml:rw
@@ -21,6 +24,9 @@ services:
       - "80:80"
       - "8080:8080"  # Traefik Frontend
       - "443:443"
+    networks:
+      - asyncy-frontend
+      - asyncy-backend
 
   app:
     # image: asyncy/platform-app
@@ -34,6 +40,8 @@ services:
       - "8080"
     volumes:
       - ./mock/app:/var/www
+    networks:
+      - asyncy-backend
 
   hub:
     # image: asyncy/platform-hub
@@ -47,6 +55,8 @@ services:
       - "8080"
     volumes:
       - ./mock/hub:/var/www
+    networks:
+      - asyncy-frontend
 
   bootstrap:
     # image: asyncy/platform-bootstrap
@@ -60,9 +70,8 @@ services:
       - "8080"
     volumes:
       - ./mock/bootstrap:/var/www
-    links:
-      - metabase
-      - postgres
+    networks:
+      - asyncy-backend
 
   api-rest:
     # image: asyncy/platform-api-rest
@@ -77,10 +86,8 @@ services:
       - "8080"
     volumes:
       - ./mock/api-rest:/var/www
-    links:
-      - postgres
-      - mongodb
-      - rabbitmq
+    networks:
+      - asyncy-backend
 
   api-graphql:
     # image: asyncy/platform-api-graphql
@@ -95,8 +102,8 @@ services:
       - "8080"
     volumes:
       - ./mock/api-graphql:/var/www
-    links:
-      - postgres
+    networks:
+      - asyncy-backend
 
   ###
   # Management
@@ -112,10 +119,8 @@ services:
       - "3000"
     volumes:
       - metabase-volume:/metabase-data
-    links:
-      - postgres
-      - mongodb
-      - rabbitmq
+    networks:
+      - asyncy-backend
 
   ###
   # Backend
@@ -131,10 +136,8 @@ services:
       - ./mock/api-private:/var/www
     depends_on:
       - postgres
-    links:
-      - postgres
-      - mongodb
-      - rabbitmq
+    networks:
+      - asyncy-backend
 
   engine:
     image: asyncy/platform-engine
@@ -144,19 +147,19 @@ services:
       - api-private
       - rabbitmq
       - mongodb
-    links:
-      - api-private
-      - rabbitmq
-      - mongodb
     environment:
       - logger_name=asyncy
       - logger_level=warning
       - logdna_key=ingestion_key
+    networks:
+      - asyncy-backend
 
   postgres:
     image: postgres:10.3-alpine
     volumes:
       - postgres-volume:/var/lib/postgresql/data
+    networks:
+      - asyncy-backend
 
   rabbitmq:
     image: rabbitmq:3.7.3-alpine
@@ -165,17 +168,19 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=rabbitmq
       - RABBITMQ_DEFAULT_PASS=rabbitmq
+    networks:
+      - asyncy-backend
 
   mongodb:
     image: mongo:3.6.3
     command: mongod --smallfiles --logpath=/dev/null
     environment:
-      # - MONGO_DATA_DIR=/data/db
-      # - MONGO_LOG_DIR=/dev/null
       - MONGODB_USER=admin
       - MONGODB_PASS=admin
     volumes:
       - mongodb-volume:/data/db
+    networks:
+      - asyncy-backend
 
   graphite-statsd:
     image: graphiteapp/docker-graphite-statsd:DZ-0.10-1.1.2
@@ -184,15 +189,49 @@ services:
       - "traefik.backend=graphite"
       - "traefik.port=80"
       - "traefik.frontend.rule=Host: graphite.${DNS:-asyncy.net}"
+    volumes:
+      - whisper-volume:/opt/graphite/storage/whisper
     ports:
       - "80"
       - "2003-2004"
       - "2023-2024"
       - "8125/udp"
       - "8126"
+    networks:
+      asyncy-backend:
+        aliases:
+          - statsd
+          - graphite
+          - carbon
+
+  grafana:
+    image: grafana/grafana:5.0.4
+    labels:
+      - "traefik.tags=web"
+      - "traefik.backend=grafana"
+      - "traefik.port=3000"
+      - "traefik.frontend.rule=Host: grafana.${DNS:-asyncy.net}"
+    environment:
+      - DS_GRAPHITE=Graphite
+    volumes:
+      - grafana-volume:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/mnt/asyncy/grafana/dashboards
+    ports:
+      - "3000"
+    networks:
+      - asyncy-backend
 
 volumes:
   postgres-volume:
   rabbitmq-volume:
   mongodb-volume:
   metabase-volume:
+  whisper-volume:
+  grafana-volume:
+
+networks:
+  asyncy-frontend:
+    driver: bridge
+  asyncy-backend:
+    driver: bridge
