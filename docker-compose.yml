@@ -211,8 +211,6 @@ services:
       - "traefik.backend=grafana"
       - "traefik.port=3000"
       - "traefik.frontend.rule=Host: grafana.${DNS:-asyncy.net}"
-    environment:
-      - DS_GRAPHITE=Graphite
     volumes:
       - grafana-volume:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
