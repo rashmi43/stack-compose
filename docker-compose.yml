@@ -59,17 +59,18 @@ services:
       - asyncy-frontend
 
   bootstrap:
-    # image: asyncy/platform-bootstrap
-    image: trinitronx/python-simplehttpserver
+    image: asyncy/platform-bootstrap
     labels:
       - "traefik.tags=web"
       - "traefik.backend=bootstrap"
-      - "traefik.port=8080"
+      - "traefik.port=5000"
       - "traefik.frontend.rule=Host: ${DNS:-asyncy.net}"
     ports:
-      - "8080"
-    volumes:
-      - ./mock/bootstrap:/var/www
+      - "5000"
+    links:
+      - metabase
+      - postgres
+      - grafana
     networks:
       - asyncy-backend
 
@@ -132,7 +133,6 @@ services:
     ports:
       - "8080"
     volumes:
-      - ./github.pem:/github.pem:ro
       - ./mock/api-private:/var/www
     depends_on:
       - postgres
@@ -213,8 +213,6 @@ services:
       - "traefik.frontend.rule=Host: grafana.${DNS:-asyncy.net}"
     volumes:
       - grafana-volume:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - ./grafana/dashboards:/mnt/asyncy/grafana/dashboards
     ports:
       - "3000"
     networks:
