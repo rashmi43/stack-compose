@@ -69,6 +69,7 @@ services:
       DNS: ${DNS:-asyncy.net}
     depends_on:
       - postgres
+      - metabase
     ports:
       - "5000"
     networks:
@@ -184,7 +185,7 @@ services:
           - carbon
 
   grafana:
-    image: grafana/grafana:5.0.4
+    image: asyncy/platform-grafana:5.0.4
     labels:
       - "traefik.tags=web"
       - "traefik.backend=grafana"
