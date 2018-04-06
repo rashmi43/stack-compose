@@ -67,7 +67,7 @@ services:
       - "traefik.frontend.rule=Host: ${DNS:-asyncy.net}"
     ports:
       - "5000"
-    links:
+    depends_on:
       - metabase
       - postgres
       - grafana
@@ -205,7 +205,7 @@ services:
           - carbon
 
   grafana:
-    image: grafana/grafana:5.0.4
+    image: asyncy/asyncy-grafana:5.0.4
     labels:
       - "traefik.tags=web"
       - "traefik.backend=grafana"
