@@ -70,7 +70,6 @@ services:
     depends_on:
       - metabase
       - postgres
-      - grafana
     networks:
       - asyncy-backend
 
@@ -158,6 +157,8 @@ services:
     image: postgres:10.3-alpine
     volumes:
       - postgres-volume:/var/lib/postgresql/data
+    ports:
+      - "5432"
     networks:
       - asyncy-backend
 
@@ -211,10 +212,12 @@ services:
       - "traefik.backend=grafana"
       - "traefik.port=3000"
       - "traefik.frontend.rule=Host: grafana.${DNS:-asyncy.net}"
-    volumes:
-      - grafana-volume:/var/lib/grafana
     ports:
       - "3000"
+    depends_on:
+      - bootstrap
+    environment:
+      - GF_DATABASE_URL=postgres://${GRAFANA_DB_USER:-grafana}:${GRAFANA_DB_PASS:-grafana}@${GRAFANA_DB_HOST:-postgres}:${GRAFANA_DB_PORT:-5432}/${GRAFANA_DB_NAME:-grafana}
     networks:
       - asyncy-backend
 
@@ -224,7 +227,6 @@ volumes:
   mongodb-volume:
   metabase-volume:
   whisper-volume:
-  grafana-volume:
 
 networks:
   asyncy-frontend:
