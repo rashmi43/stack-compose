@@ -205,7 +205,7 @@ services:
           - carbon
 
   grafana:
-    image: asyncy/grafana:5.0.4
+    image: asyncy/platform-grafana:5.0.4
     labels:
       - "traefik.tags=web"
       - "traefik.backend=grafana"
