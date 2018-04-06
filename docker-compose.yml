@@ -41,7 +41,7 @@ services:
     volumes:
       - ./mock/app:/var/www
     networks:
-      - asyncy-backend
+      - asyncy-frontend
 
   hub:
     # image: asyncy/platform-hub
@@ -65,45 +65,31 @@ services:
       - "traefik.backend=bootstrap"
       - "traefik.port=5000"
       - "traefik.frontend.rule=Host: ${DNS:-asyncy.net}"
+    environment:
+      DNS: ${DNS:-asyncy.net}
+    depends_on:
+      - postgres
     ports:
       - "5000"
-    links:
-      - metabase
+    networks:
+      - asyncy-frontend
+      - asyncy-backend
+
+  graphql:
+    image: asyncy/platform-graphql
+    command: ["-c", "postgres://postgres:@postgres:5432/postgres",
+              "--schema", "app_public,hub_public"]
+    labels:
+      - "traefik.tags=web"
+      - "traefik.backend=graphql"
+      - "traefik.port=5000"
+      - "traefik.frontend.rule=Host: api.${DNS:-asyncy.net}; PathPrefix: /graphql, /graphiql, /_postgraphile"
+    ports:
+      - "5000"
+    depends_on:
       - postgres
-      - grafana
     networks:
-      - asyncy-backend
-
-  api-rest:
-    # image: asyncy/platform-api-rest
-    # command: server --public
-    image: trinitronx/python-simplehttpserver
-    labels:
-      - "traefik.tags=web"
-      - "traefik.backend=api-rest"
-      - "traefik.port=8080"
-      - "traefik.frontend.rule=Host: api.${DNS:-asyncy.net}"
-    ports:
-      - "8080"
-    volumes:
-      - ./mock/api-rest:/var/www
-    networks:
-      - asyncy-backend
-
-  api-graphql:
-    # image: asyncy/platform-api-graphql
-    # command: server --public
-    image: trinitronx/python-simplehttpserver
-    labels:
-      - "traefik.tags=web"
-      - "traefik.backend=api-graphql"
-      - "traefik.port=8080"
-      - "traefik.frontend.rule=Host: api.${DNS:-asyncy.net}; PathPrefix: /graphql"
-    ports:
-      - "8080"
-    volumes:
-      - ./mock/api-graphql:/var/www
-    networks:
+      - asyncy-frontend
       - asyncy-backend
 
   ###
@@ -126,14 +112,12 @@ services:
   ###
   # Backend
   ###
-  api-private:
-    # image: asyncy/platform-api-rest
-    # command: server --private
-    image: trinitronx/python-simplehttpserver
+  graphql-private:
+    image: asyncy/platform-graphql
+    command: ["-c", "postgres://postgres:@postgres:5432/postgres",
+              "--schema", "app_public,hub_public"]
     ports:
-      - "8080"
-    volumes:
-      - ./mock/api-private:/var/www
+      - "5000"
     depends_on:
       - postgres
     networks:
@@ -144,9 +128,8 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
     depends_on:
-      - api-private
       - rabbitmq
-      - mongodb
+      - redis
     environment:
       - logger_name=asyncy
       - logger_level=warning
@@ -171,14 +154,10 @@ services:
     networks:
       - asyncy-backend
 
-  mongodb:
-    image: mongo:3.6.3
-    command: mongod --smallfiles --logpath=/dev/null
-    environment:
-      - MONGODB_USER=admin
-      - MONGODB_PASS=admin
+  redis:
+    image: redis:alpine
     volumes:
-      - mongodb-volume:/data/db
+      - redis-volume:/data
     networks:
       - asyncy-backend
 
@@ -221,7 +200,7 @@ services:
 volumes:
   postgres-volume:
   rabbitmq-volume:
-  mongodb-volume:
+  redis-volume:
   metabase-volume:
   whisper-volume:
   grafana-volume:
