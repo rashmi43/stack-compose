@@ -78,8 +78,6 @@ services:
 
   graphql:
     image: asyncy/platform-graphql
-    command: ["-c", "postgres://postgres:@postgres:5432/postgres",
-              "--schema", "app_public,hub_public"]
     labels:
       - "traefik.tags=web"
       - "traefik.backend=graphql"
@@ -115,8 +113,6 @@ services:
   ###
   graphql-private:
     image: asyncy/platform-graphql
-    command: ["-c", "postgres://postgres:@postgres:5432/postgres",
-              "--schema", "app_public,hub_public"]
     ports:
       - "5000"
     depends_on:
