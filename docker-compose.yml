@@ -70,6 +70,7 @@ services:
     depends_on:
       - metabase
       - postgres
+      - kibana
     networks:
       - asyncy-backend
 
@@ -146,12 +147,18 @@ services:
       - api-private
       - rabbitmq
       - mongodb
+      - fluentd
     environment:
       - logger_name=asyncy
       - logger_level=warning
       - logdna_key=ingestion_key
     networks:
       - asyncy-backend
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:24224
+        tag: asyncy.engine
 
   postgres:
     image: postgres:10.3-alpine
@@ -206,7 +213,7 @@ services:
           - carbon
 
   grafana:
-    image: asyncy/platform-grafana:5.0.4
+    image: asyncy/platform-grafana
     labels:
       - "traefik.tags=web"
       - "traefik.backend=grafana"
@@ -218,6 +225,38 @@ services:
       - bootstrap
     environment:
       - GF_DATABASE_URL=postgres://${GRAFANA_DB_USER:-grafana}:${GRAFANA_DB_PASS:-grafana}@${GRAFANA_DB_HOST:-postgres}:${GRAFANA_DB_PORT:-5432}/${GRAFANA_DB_NAME:-grafana}
+    networks:
+      - asyncy-backend
+
+  fluentd:
+    image: asyncy/platform-fluentd
+    networks:
+      - asyncy-backend
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.2.3
+    labels:
+      - "traefik.tags=web"
+      - "traefik.backend=elasticsearch"
+      - "traefik.port=9200"
+      - "traefik.frontend.rule=Host: elasticsearch.${DNS:-asyncy.net}"
+    ports:
+      - "9200"
+    networks:
+      - asyncy-backend
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.2.3
+    labels:
+      - "traefik.tags=web"
+      - "traefik.backend=kibana"
+      - "traefik.port=5601"
+      - "traefik.frontend.rule=Host: kibana.${DNS:-asyncy.net}"
+    ports:
+      - "5601"
     networks:
       - asyncy-backend
 
