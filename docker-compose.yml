@@ -243,6 +243,8 @@ services:
       - "traefik.backend=elasticsearch"
       - "traefik.port=9200"
       - "traefik.frontend.rule=Host: elasticsearch.${DNS:-asyncy.net}"
+    volumes:
+      - elasticsearch-volume:/usr/share/elasticsearch/data
     ports:
       - "9200"
     networks:
@@ -266,6 +268,7 @@ volumes:
   mongodb-volume:
   metabase-volume:
   whisper-volume:
+  elasticsearch-volume:
 
 networks:
   asyncy-frontend:
