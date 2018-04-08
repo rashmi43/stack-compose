@@ -1,10 +1,16 @@
 # Asyncy Platform bootstrapped in Docker Compose
 
 
-## Setup
+## Start
 
 ```sh
-docker-compose up -d
+./run.sh
+```
+
+## Stop
+
+```sh
+docker-compose down
 ```
 
 Then navigate to
