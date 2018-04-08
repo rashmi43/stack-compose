@@ -7,12 +7,12 @@
 ./run.sh
 ```
 
+Then navigate to
+
+http://asyncy.net
+
 ## Stop
 
 ```sh
 docker-compose down
 ```
-
-Then navigate to
-
-http://asyncy.net
