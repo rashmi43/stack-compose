@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 DNS="${DNS:-asyncy.net}"
-MINIMUM_MEMORY="20480"
+MINIMUM_MEMORY="2048"
 
 start_docker_compose() {
   COUNT_IDS=$(docker-compose ps -q | wc -l)
