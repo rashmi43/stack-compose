@@ -15,8 +15,7 @@ services:
       - --entryPoints=Name:http Address::80 Compress::true
       - --defaultEntryPoints=http
       - --metrics
-      - --metrics.statsd
-      - --metrics.statsd.address=statsd:8125
+      - --metrics.prometheus
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
       - /dev/null:/traefik.toml:rw
@@ -190,28 +189,6 @@ services:
     networks:
       - asyncy-backend
 
-  graphite-statsd:
-    image: graphiteapp/docker-graphite-statsd:DZ-0.10-1.1.2
-    labels:
-      - "traefik.tags=web"
-      - "traefik.backend=graphite"
-      - "traefik.port=80"
-      - "traefik.frontend.rule=Host: graphite.${DNS:-asyncy.net}"
-    volumes:
-      - whisper-volume:/opt/graphite/storage/whisper
-    ports:
-      - "80"
-      - "2003-2004"
-      - "2023-2024"
-      - "8125/udp"
-      - "8126"
-    networks:
-      asyncy-backend:
-        aliases:
-          - statsd
-          - graphite
-          - carbon
-
   grafana:
     image: asyncy/platform-grafana
     labels:
@@ -262,13 +239,36 @@ services:
     networks:
       - asyncy-backend
 
+  statsd:
+    image: prom/statsd-exporter:v0.6.0
+    command: -statsd.listen-udp=:8125 -statsd.listen-tcp=:8125
+    ports:
+      - "8125"
+      - "9102"
+    networks:
+      - asyncy-backend
+
+  prometheus:
+    image: asyncy/platform-prometheus 
+    labels:
+      - "traefik.tags=web"
+      - "traefik.backend=prometheus"
+      - "traefik.port=9090"
+      - "traefik.frontend.rule=Host: prometheus.${DNS:-asyncy.net}"
+    volumes:
+      - prometheus-volume:/prometheus
+    ports:
+      - "9090"
+    networks:
+      - asyncy-backend
+
 volumes:
   postgres-volume:
   rabbitmq-volume:
   mongodb-volume:
   metabase-volume:
-  whisper-volume:
   elasticsearch-volume:
+  prometheus-volume:
 
 networks:
   asyncy-frontend:
