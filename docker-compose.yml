@@ -228,7 +228,7 @@ services:
       - asyncy-backend
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:6.2.3
+    image: asyncy/platform-kibana
     labels:
       - "traefik.tags=web"
       - "traefik.backend=kibana"
