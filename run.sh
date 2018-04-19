@@ -22,8 +22,8 @@ start_docker_compose() {
 }
 
 if [ "$(uname)" == "Darwin" ]; then
-  DOCKER_MEMORY=$(python -c 'import sys, json; print json.load(sys.stdin)["memoryMiB"]' < ~/Library/Group\ Containers/group.com.docker/settings.json)
-  if [ "$DOCKER_MEMORY" -lt "$MINIMUM_MEMORY" ]; then
+  DOCKER_MEMORY=$(python -c 'import sys, json; print(json.load(sys.stdin)["memoryMiB"])' < ~/Library/Group\ Containers/group.com.docker/settings.json)
+  if [ $((DOCKER_MEMORY)) -lt $((MINIMUM_MEMORY)) ]; then
     echo -e "!!!! WARNING: MINIMUM MEMORY REQUIREMENTS NOT MET !!!!\\nAsyncy recommends allocating at least ${MINIMUM_MEMORY}MB to Docker\\nSee https://docs.docker.com/docker-for-mac/#advanced for details"
     read -r -p "Continue? [y/n] " REPLY
     if [[ "$REPLY" == "n" ]]; then
