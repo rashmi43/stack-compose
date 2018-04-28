@@ -27,35 +27,29 @@ services:
       - asyncy-frontend
       - asyncy-backend
 
-  app:
-    # image: asyncy/platform-app
-    image: trinitronx/python-simplehttpserver
-    labels:
-      - "traefik.tags=web"
-      - "traefik.backend=app"
-      - "traefik.port=8080"
-      - "traefik.frontend.rule=Host: app.${DNS:-asyncy.net}"
-    ports:
-      - "8080"
-    volumes:
-      - ./mock/app:/var/www
-    networks:
-      - asyncy-frontend
+  # app:
+  #   image: asyncy/platform-app
+  #   labels:
+  #     - "traefik.tags=web"
+  #     - "traefik.backend=app"
+  #     - "traefik.port=5000"
+  #     - "traefik.frontend.rule=Host: app.${DNS:-asyncy.net}"
+  #   ports:
+  #     - "5000"
+  #   networks:
+  #     - asyncy-frontend
 
-  hub:
-    # image: asyncy/platform-hub
-    image: trinitronx/python-simplehttpserver
-    labels:
-      - "traefik.tags=web"
-      - "traefik.backend=hub"
-      - "traefik.port=8080"
-      - "traefik.frontend.rule=Host: hub.${DNS:-asyncy.net}"
-    ports:
-      - "8080"
-    volumes:
-      - ./mock/hub:/var/www
-    networks:
-      - asyncy-frontend
+  # hub:
+  #   image: asyncy/platform-hub
+  #   labels:
+  #     - "traefik.tags=web"
+  #     - "traefik.backend=hub"
+  #     - "traefik.port=5000"
+  #     - "traefik.frontend.rule=Host: hub.${DNS:-asyncy.net}"
+  #   ports:
+  #     - "5000"
+  #   networks:
+  #     - asyncy-frontend
 
   bootstrap:
     image: asyncy/platform-bootstrap
