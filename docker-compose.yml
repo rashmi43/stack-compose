@@ -71,6 +71,8 @@ services:
     networks:
       - asyncy-frontend
       - asyncy-backend
+    volumes:
+      - asyncy-volume:/app
 
   graphql:
     image: asyncy/platform-graphql
@@ -120,6 +122,7 @@ services:
     image: asyncy/platform-engine
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
+      - asyncy-volume:/app
     depends_on:
       - rabbitmq
       - redis
@@ -236,6 +239,7 @@ services:
       - asyncy-backend
 
 volumes:
+  asyncy-volume:
   postgres-volume:
   rabbitmq-volume:
   redis-volume:
