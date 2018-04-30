@@ -51,6 +51,21 @@ services:
   #   networks:
   #     - asyncy-frontend
 
+  git:
+    image: asyncy/platform-git-server
+    labels:
+      - "traefik.tags=web"
+      - "traefik.backend=git"
+      - "traefik.port=7005"
+      - "traefik.frontend.rule=Host: git.${DNS:-asyncy.net}"
+    ports:
+      - "7005"
+    networks:
+      - asyncy-frontend
+      - asyncy-backend
+    volumes:
+      - asyncy-volume:/tmp
+
   bootstrap:
     image: asyncy/platform-bootstrap
     labels:
@@ -225,7 +240,7 @@ services:
       - asyncy-backend
 
   prometheus:
-    image: asyncy/platform-prometheus 
+    image: asyncy/platform-prometheus
     labels:
       - "traefik.tags=web"
       - "traefik.backend=prometheus"
