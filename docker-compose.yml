@@ -39,6 +39,25 @@ services:
     volumes:
       - asyncy-volume:/asyncy
 
+  bootstrap:
+    image: asyncy/platform-bootstrap
+    labels:
+      - "traefik.tags=web"
+      - "traefik.backend=bootstrap"
+      - "traefik.port=5000"
+      - "traefik.frontend.rule=Host: ${DNS:-asyncy.net}"
+    environment:
+      DNS: ${DNS:-asyncy.net}
+    networks:
+      - asyncy-backend
+    ports:
+      - "5000"
+    networks:
+      - asyncy-frontend
+      - asyncy-backend
+    volumes:
+      - asyncy-volume:/asyncy
+
   server:
     image: asyncy/platform-server
     labels:
