@@ -2,9 +2,6 @@ version: "3.5"
 
 services:
 
-  ###
-  # Frontend
-  ###
   traefik:
     image: traefik:v1.5.1-alpine
     command:
@@ -21,35 +18,11 @@ services:
       - /dev/null:/traefik.toml:rw
     ports:
       - "80:80"
-      - "8080:8080"  # Traefik Frontend
+      - "8080:8080"
       - "443:443"
     networks:
       - asyncy-frontend
       - asyncy-backend
-
-  # app:
-  #   image: asyncy/platform-app
-  #   labels:
-  #     - "traefik.tags=web"
-  #     - "traefik.backend=app"
-  #     - "traefik.port=5000"
-  #     - "traefik.frontend.rule=Host: app.${DNS:-asyncy.net}"
-  #   ports:
-  #     - "5000"
-  #   networks:
-  #     - asyncy-frontend
-
-  # hub:
-  #   image: asyncy/platform-hub
-  #   labels:
-  #     - "traefik.tags=web"
-  #     - "traefik.backend=hub"
-  #     - "traefik.port=5000"
-  #     - "traefik.frontend.rule=Host: hub.${DNS:-asyncy.net}"
-  #   ports:
-  #     - "5000"
-  #   networks:
-  #     - asyncy-frontend
 
   git:
     image: asyncy/platform-git-server
@@ -64,83 +37,29 @@ services:
       - asyncy-frontend
       - asyncy-backend
     volumes:
-      - asyncy-volume:/tmp
+      - asyncy-volume:/asyncy
 
-  bootstrap:
-    image: asyncy/platform-bootstrap
+  server:
+    image: asyncy/platform-server
     labels:
       - "traefik.tags=web"
-      - "traefik.backend=bootstrap"
-      - "traefik.port=5000"
+      - "traefik.backend=server"
+      - "traefik.port=8888"
       - "traefik.frontend.rule=Host: ${DNS:-asyncy.net}"
-    environment:
-      DNS: ${DNS:-asyncy.net}
-    depends_on:
-      - postgres
-      - metabase
-      - kibana
-    networks:
-      - asyncy-backend
     ports:
-      - "5000"
+      - "8888"
     networks:
       - asyncy-frontend
       - asyncy-backend
     volumes:
-      - asyncy-volume:/app
-
-  graphql:
-    image: asyncy/platform-graphql
-    labels:
-      - "traefik.tags=web"
-      - "traefik.backend=graphql"
-      - "traefik.port=5000"
-      - "traefik.frontend.rule=Host: api.${DNS:-asyncy.net}; PathPrefix: /graphql, /graphiql, /_postgraphile"
-    ports:
-      - "5000"
-    depends_on:
-      - postgres
-    networks:
-      - asyncy-frontend
-      - asyncy-backend
-
-  ###
-  # Management
-  ###
-  metabase:
-    image: metabase/metabase
-    labels:
-      - "traefik.tags=web"
-      - "traefik.backend=metabase"
-      - "traefik.port=3000"
-      - "traefik.frontend.rule=Host: metabase.${DNS:-asyncy.net}"
-    ports:
-      - "3000"
-    volumes:
-      - metabase-volume:/metabase-data
-    networks:
-      - asyncy-backend
-
-  ###
-  # Backend
-  ###
-  graphql-private:
-    image: asyncy/platform-graphql
-    ports:
-      - "5000"
-    depends_on:
-      - postgres
-    networks:
-      - asyncy-backend
+      - asyncy-volume:/asyncy
 
   engine:
     image: asyncy/platform-engine
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
-      - asyncy-volume:/app
+      - asyncy-volume:/asyncy
     depends_on:
-      - rabbitmq
-      - redis
       - fluentd
     environment:
       - logger_name=asyncy
@@ -153,32 +72,6 @@ services:
       options:
         fluentd-address: localhost:24224
         tag: asyncy.engine
-
-  postgres:
-    image: postgres:10.3-alpine
-    volumes:
-      - postgres-volume:/var/lib/postgresql/data
-    ports:
-      - "5432"
-    networks:
-      - asyncy-backend
-
-  rabbitmq:
-    image: rabbitmq:3.7.3-alpine
-    volumes:
-      - rabbitmq-volume:/var/lib/rabbitmq
-    environment:
-      - RABBITMQ_DEFAULT_USER=rabbitmq
-      - RABBITMQ_DEFAULT_PASS=rabbitmq
-    networks:
-      - asyncy-backend
-
-  redis:
-    image: redis:alpine
-    volumes:
-      - redis-volume:/data
-    networks:
-      - asyncy-backend
 
   grafana:
     image: asyncy/platform-grafana
@@ -255,10 +148,6 @@ services:
 
 volumes:
   asyncy-volume:
-  postgres-volume:
-  rabbitmq-volume:
-  redis-volume:
-  metabase-volume:
   elasticsearch-volume:
   prometheus-volume:
 
