@@ -58,11 +58,11 @@ services:
     volumes:
       - asyncy-volume:/asyncy
 
-  server:
-    image: asyncy/platform-server
+  gateway:
+    image: asyncy/platform-gateway
     labels:
       - "traefik.tags=web"
-      - "traefik.backend=server"
+      - "traefik.backend=gateway"
       - "traefik.port=8888"
       - "traefik.frontend.rule=Host: ${DNS:-asyncy.net}"
     ports:
