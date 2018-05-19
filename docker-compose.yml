@@ -29,10 +29,10 @@ services:
     labels:
       - "traefik.tags=web"
       - "traefik.backend=git"
-      - "traefik.port=7005"
+      - "traefik.port=8888"
       - "traefik.frontend.rule=Host: git.${DNS:-asyncy.net}"
     ports:
-      - "7005"
+      - "8888"
     networks:
       - asyncy-frontend
       - asyncy-backend
@@ -83,7 +83,6 @@ services:
     environment:
       - logger_name=asyncy
       - logger_level=warning
-      - logdna_key=ingestion_key
     networks:
       - asyncy-backend
     logging:
