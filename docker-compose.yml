@@ -36,6 +36,8 @@ services:
     networks:
       - asyncy-frontend
       - asyncy-backend
+    environment:
+      STORY: /stories/app/release/alpha
     volumes:
       - asyncy-volume:/asyncy
 
@@ -64,7 +66,7 @@ services:
       - "traefik.tags=web"
       - "traefik.backend=gateway"
       - "traefik.port=8888"
-      - "traefik.frontend.rule=Host: ${DNS:-asyncy.net}"
+      - "traefik.frontend.rule=Host: ${DNS:-sandbox.asyncy.net}"
     ports:
       - "8888"
     networks:
@@ -80,6 +82,8 @@ services:
       - asyncy-volume:/asyncy
     depends_on:
       - fluentd
+    ports:
+      - "8888"
     environment:
       - logger_name=asyncy
       - logger_level=warning
