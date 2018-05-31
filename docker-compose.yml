@@ -39,7 +39,7 @@ services:
     environment:
       STORY: /stories/app/release/alpha
     volumes:
-      - asyncy-volume:/asyncy
+      - application-volume:/asyncy
 
   bootstrap:
     image: asyncy/platform-bootstrap
@@ -58,7 +58,7 @@ services:
       - asyncy-frontend
       - asyncy-backend
     volumes:
-      - asyncy-volume:/asyncy
+      - application-volume:/asyncy
 
   gateway:
     image: asyncy/platform-gateway
@@ -73,13 +73,13 @@ services:
       - asyncy-frontend
       - asyncy-backend
     volumes:
-      - asyncy-volume:/asyncy
+      - application-volume:/asyncy
 
   engine:
     image: asyncy/platform-engine
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
-      - asyncy-volume:/asyncy
+      - application-volume:/asyncy
     depends_on:
       - fluentd
     ports:
@@ -169,7 +169,7 @@ services:
       - asyncy-backend
 
 volumes:
-  asyncy-volume:
+  application-volume:
   elasticsearch-volume:
   prometheus-volume:
 
