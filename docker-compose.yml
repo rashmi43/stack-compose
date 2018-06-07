@@ -168,13 +168,53 @@ services:
     networks:
       - asyncy-backend
 
+  postgres:
+    image: postgres:10.3-alpine
+    volumes:
+      - postgres-volume:/var/lib/postgresql/data
+    ports:
+      - "5432"
+    networks:
+      - asyncy-backend
+
+  rabbitmq:
+    image: rabbitmq:3.7.3-alpine
+    volumes:
+      - rabbitmq-volume:/var/lib/rabbitmq
+
+  #logspout:
+    #image: gliderlabs/logspout:latest
+    #networks:
+      #- asyncy-logging
+    #volumes:
+      #- /var/run/docker.sock:/var/run/docker.sock
+    #environment:
+      #- LOGDNA_INGESTION_KEY="${LOGDNA_INGESTION_KEY}"
+      #- SYSLOG_STRUCTURED_DATA="logdna@48950 tag=\"asyncy-alpha-jp\""
+      #- SYSLOG_TAG='{{.Container.Config.Hostname}}'
+    #command:
+      #syslog+tls://syslog-a.logdna.com:32443
+    #deploy:
+      #mode: global
+      #resources:
+        #limits:
+          #cpus: '0.20'
+          #memory: 256M
+        #reservations:
+          #cpus: '0.10'
+          #memory: 128M
+
 volumes:
   application-volume:
   elasticsearch-volume:
   prometheus-volume:
+  postgres-volume:
+  rabbitmq-volume:
 
 networks:
   asyncy-frontend:
     driver: bridge
   asyncy-backend:
+    driver: bridge
+  asyncy-logging:
     driver: bridge
