@@ -115,6 +115,8 @@ services:
       - bootstrap
     networks:
       - asyncy-backend
+    volumes:
+      - grafana-volume:/var/lib/grafana
 
   logspout:
     image: gliderlabs/logspout:latest
@@ -140,6 +142,8 @@ services:
 
 volumes:
   application-volume:
+  prometheus-volume:
+  grafana-volume:
 
 networks:
   asyncy-frontend:
