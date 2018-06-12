@@ -80,77 +80,11 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
       - application-volume:/asyncy
-    depends_on:
-      - fluentd
     ports:
       - "8888"
     environment:
       - logger_name=asyncy
       - logger_level=warning
-    networks:
-      - asyncy-backend
-    logging:
-      driver: "fluentd"
-      options:
-        fluentd-address: localhost:24224
-        tag: asyncy.engine
-
-  grafana:
-    image: asyncy/platform-grafana
-    labels:
-      - "traefik.tags=web"
-      - "traefik.backend=grafana"
-      - "traefik.port=3000"
-      - "traefik.frontend.rule=Host: grafana.${DNS:-asyncy.net}"
-    ports:
-      - "3000"
-    depends_on:
-      - bootstrap
-    environment:
-      - GF_DATABASE_URL=postgres://${GRAFANA_DB_USER:-grafana}:${GRAFANA_DB_PASS:-grafana}@${GRAFANA_DB_HOST:-postgres}:${GRAFANA_DB_PORT:-5432}/${GRAFANA_DB_NAME:-grafana}
-    networks:
-      - asyncy-backend
-
-  fluentd:
-    image: asyncy/platform-fluentd
-    networks:
-      - asyncy-backend
-    ports:
-      - "24224:24224"
-      - "24224:24224/udp"
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.2.3
-    labels:
-      - "traefik.tags=web"
-      - "traefik.backend=elasticsearch"
-      - "traefik.port=9200"
-      - "traefik.frontend.rule=Host: elasticsearch.${DNS:-asyncy.net}"
-    volumes:
-      - elasticsearch-volume:/usr/share/elasticsearch/data
-    ports:
-      - "9200"
-    networks:
-      - asyncy-backend
-
-  kibana:
-    image: asyncy/platform-kibana
-    labels:
-      - "traefik.tags=web"
-      - "traefik.backend=kibana"
-      - "traefik.port=5601"
-      - "traefik.frontend.rule=Host: kibana.${DNS:-asyncy.net}"
-    ports:
-      - "5601"
-    networks:
-      - asyncy-backend
-
-  statsd:
-    image: prom/statsd-exporter:v0.6.0
-    command: -statsd.listen-udp=:8125 -statsd.listen-tcp=:8125
-    ports:
-      - "8125"
-      - "9102"
     networks:
       - asyncy-backend
 
@@ -168,48 +102,44 @@ services:
     networks:
       - asyncy-backend
 
-  postgres:
-    image: postgres:10.3-alpine
-    volumes:
-      - postgres-volume:/var/lib/postgresql/data
+  grafana:
+    image: asyncy/platform-grafana
+    labels:
+      - "traefik.tags=web"
+      - "traefik.backend=grafana"
+      - "traefik.port=3000"
+      - "traefik.frontend.rule=Host: grafana.${DNS:-asyncy.net}"
     ports:
-      - "5432"
+      - "3000"
+    depends_on:
+      - bootstrap
     networks:
       - asyncy-backend
 
-  rabbitmq:
-    image: rabbitmq:3.7.3-alpine
+  logspout:
+    image: gliderlabs/logspout:latest
+    networks:
+      - asyncy-logging
     volumes:
-      - rabbitmq-volume:/var/lib/rabbitmq
-
-  #logspout:
-    #image: gliderlabs/logspout:latest
-    #networks:
-      #- asyncy-logging
-    #volumes:
-      #- /var/run/docker.sock:/var/run/docker.sock
-    #environment:
-      #- LOGDNA_INGESTION_KEY="${LOGDNA_INGESTION_KEY}"
-      #- SYSLOG_STRUCTURED_DATA="logdna@48950 tag=\"asyncy-alpha-jp\""
-      #- SYSLOG_TAG='{{.Container.Config.Hostname}}'
-    #command:
-      #syslog+tls://syslog-a.logdna.com:32443
-    #deploy:
-      #mode: global
-      #resources:
-        #limits:
-          #cpus: '0.20'
-          #memory: 256M
-        #reservations:
-          #cpus: '0.10'
-          #memory: 128M
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - LOGDNA_INGESTION_KEY="6741911c805b4846916703bcc528fc6b"
+      - SYSLOG_STRUCTURED_DATA="logdna@48950 tag=\"docker\""
+      - SYSLOG_TAG="asyncy-alpha"
+    command:
+      syslog+tls://syslog-a.logdna.com:32443
+    deploy:
+      mode: global
+      resources:
+        limits:
+          cpus: '0.20'
+          memory: 256M
+        reservations:
+          cpus: '0.10'
+          memory: 128M
 
 volumes:
   application-volume:
-  elasticsearch-volume:
-  prometheus-volume:
-  postgres-volume:
-  rabbitmq-volume:
 
 networks:
   asyncy-frontend:
