@@ -41,25 +41,6 @@ services:
     volumes:
       - application-volume:/asyncy
 
-  bootstrap:
-    image: asyncy/platform-bootstrap
-    labels:
-      - "traefik.tags=web"
-      - "traefik.backend=bootstrap"
-      - "traefik.port=5000"
-      - "traefik.frontend.rule=Host: ${DNS:-asyncy.net}"
-    environment:
-      DNS: ${DNS:-asyncy.net}
-    networks:
-      - asyncy-backend
-    ports:
-      - "5000"
-    networks:
-      - asyncy-frontend
-      - asyncy-backend
-    volumes:
-      - application-volume:/asyncy
-
   gateway:
     image: asyncy/platform-gateway
     labels:
@@ -111,8 +92,6 @@ services:
       - "traefik.frontend.rule=Host: grafana.${DNS:-asyncy.net}"
     ports:
       - "3000"
-    depends_on:
-      - bootstrap
     networks:
       - asyncy-backend
     volumes:
