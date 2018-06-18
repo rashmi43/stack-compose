@@ -24,6 +24,16 @@ services:
       - asyncy-frontend
       - asyncy-backend
 
+  bootstrap:
+    image: asyncy/platform-bootstrap
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - application-volume:/asyncy
+    ports:
+      - "5000:5000"
+    networks:
+      - asyncy-backend
+
   git:
     image: asyncy/platform-git-server
     labels:
@@ -47,7 +57,7 @@ services:
       - "traefik.tags=web"
       - "traefik.backend=gateway"
       - "traefik.port=8888"
-      - "traefik.frontend.rule=Host: ${DNS:-sandbox.asyncy.net}"
+      - "traefik.frontend.rule=Host: ${DNS:-asyncy.net}"
     ports:
       - "8888"
     networks:
