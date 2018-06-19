@@ -33,6 +33,8 @@ services:
       - "5000:5000"
     networks:
       - asyncy-backend
+    environment:
+      ASSET_DIR: /asyncy
 
   git:
     image: asyncy/platform-git-server
