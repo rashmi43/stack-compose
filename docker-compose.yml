@@ -37,7 +37,7 @@ services:
       - ASSET_DIR=/asyncy
       - SENTRY_DSN=$SENTRY_DSN_BOOTSTRAP
       - ENVIRONMENT=alpha
-      - USER_ID=$ASYNCY_USER_ID
+      - ASYNCY_USER_ID=$ASYNCY_USER_ID
 
   git:
     image: asyncy/platform-git-server
@@ -55,7 +55,7 @@ services:
       - DEPLOY_URL=http://bootstrap:5000/alpha/deploy
       - SENTRY_DSN=$SENTRY_DSN_GIT
       - ENVIRONMENT=alpha
-      - USER_ID=$ASYNCY_USER_ID
+      - ASYNCY_USER_ID=$ASYNCY_USER_ID
     volumes:
       - application-volume:/asyncy
 
@@ -76,7 +76,7 @@ services:
     environment:
       - SENTRY_DSN=$SENTRY_DSN_GATEWAY
       - ENVIRONMENT=alpha
-      - USER_ID=$ASYNCY_USER_ID
+      - ASYNCY_USER_ID=$ASYNCY_USER_ID
 
   engine:
     image: asyncy/platform-engine
@@ -90,7 +90,7 @@ services:
       - logger_level=debug
       - SENTRY_DSN=$SENTRY_DSN_ENGINE
       - ENVIRONMENT=alpha
-      - USER_ID=$ASYNCY_USER_ID
+      - ASYNCY_USER_ID=$ASYNCY_USER_ID
     networks:
       - asyncy-backend
 
