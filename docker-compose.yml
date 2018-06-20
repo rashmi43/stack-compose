@@ -4,6 +4,7 @@ services:
 
   traefik:
     image: traefik:v1.5.1-alpine
+    hostname: traefik
     command:
       - --api
       - --docker
@@ -26,6 +27,7 @@ services:
 
   bootstrap:
     image: asyncy/platform-bootstrap
+    hostname: bootstrap
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - application-volume:/asyncy
@@ -41,6 +43,7 @@ services:
 
   git:
     image: asyncy/platform-git-server
+    hostname: git
     labels:
       - "traefik.tags=web"
       - "traefik.backend=git"
@@ -61,6 +64,7 @@ services:
 
   gateway:
     image: asyncy/platform-gateway
+    hostname: gateway
     labels:
       - "traefik.tags=web"
       - "traefik.backend=gateway"
@@ -80,6 +84,7 @@ services:
 
   engine:
     image: asyncy/platform-engine
+    hostname: engine
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
       - application-volume:/asyncy
@@ -96,6 +101,7 @@ services:
 
   prometheus:
     image: asyncy/platform-prometheus
+    hostname: prometheus
     labels:
       - "traefik.tags=web"
       - "traefik.backend=prometheus"
@@ -110,6 +116,7 @@ services:
 
   grafana:
     image: asyncy/platform-grafana
+    hostname: grafana
     labels:
       - "traefik.tags=web"
       - "traefik.backend=grafana"
@@ -124,14 +131,16 @@ services:
 
   logspout:
     image: gliderlabs/logspout:latest
+    hostname: logspout
     networks:
       - asyncy-logging
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - LOGDNA_INGESTION_KEY="${LOGDNA_INGESTION_KEY}"
-      - SYSLOG_STRUCTURED_DATA="logdna@48950 tag=\"docker\""
-      - SYSLOG_TAG="asyncy-alpha"
+      - "LOGDNA_INGESTION_KEY=${LOGDNA_INGESTION_KEY}"
+      - "SYSLOG_HOSTNAME='{{index .Container.Config.Labels \"com.docker.compose.project\"}}'"
+      - "SYSLOG_STRUCTURED_DATA='logdna@48950 tag=\"${ASYNCY_USER_ID}\""
+      - "SYSLOG_TAG='{{.Container.Config.Hostname}}'"
     command:
       syslog+tls://syslog-a.logdna.com:32443
     deploy:
