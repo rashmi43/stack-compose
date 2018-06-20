@@ -34,7 +34,10 @@ services:
     networks:
       - asyncy-backend
     environment:
-      ASSET_DIR: /asyncy
+      - ASSET_DIR=/asyncy
+      - SENTRY_DSN=$SENTRY_DSN_BOOTSTRAP
+      - ENVIRONMENT=alpha
+      - USER_ID=$ASYNCY_USER_ID
 
   git:
     image: asyncy/platform-git-server
@@ -49,7 +52,10 @@ services:
       - asyncy-frontend
       - asyncy-backend
     environment:
-      DEPLOY_URL: http://bootstrap:5000/alpha/deploy
+      - DEPLOY_URL=http://bootstrap:5000/alpha/deploy
+      - SENTRY_DSN=$SENTRY_DSN_GIT
+      - ENVIRONMENT=alpha
+      - USER_ID=$ASYNCY_USER_ID
     volumes:
       - application-volume:/asyncy
 
@@ -67,6 +73,10 @@ services:
       - asyncy-backend
     volumes:
       - application-volume:/asyncy
+    environment:
+      - SENTRY_DSN=$SENTRY_DSN_GATEWAY
+      - ENVIRONMENT=alpha
+      - USER_ID=$ASYNCY_USER_ID
 
   engine:
     image: asyncy/platform-engine
@@ -77,7 +87,10 @@ services:
       - "8888"
     environment:
       - logger_name=asyncy
-      - logger_level=warning
+      - logger_level=debug
+      - SENTRY_DSN=$SENTRY_DSN_ENGINE
+      - ENVIRONMENT=alpha
+      - USER_ID=$ASYNCY_USER_ID
     networks:
       - asyncy-backend
 
@@ -116,7 +129,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - LOGDNA_INGESTION_KEY="${INGESTION_KEY}"
+      - LOGDNA_INGESTION_KEY="${LOGDNA_INGESTION_KEY}"
       - SYSLOG_STRUCTURED_DATA="logdna@48950 tag=\"docker\""
       - SYSLOG_TAG="asyncy-alpha"
     command:
