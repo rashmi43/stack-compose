@@ -72,6 +72,7 @@ services:
       - "traefik.frontend.rule=Host: ${DNS:-asyncy.net}"
     ports:
       - "8888"
+      - "8889"
     networks:
       - asyncy-frontend
       - asyncy-backend
@@ -81,6 +82,7 @@ services:
       - SENTRY_DSN=$SENTRY_DSN_GATEWAY
       - ENVIRONMENT=alpha
       - ASYNCY_USER_ID=$ASYNCY_USER_ID
+      - ENGINE_ADDR=engine:8084
 
   engine:
     image: asyncy/platform-engine
@@ -89,7 +91,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:rw
       - application-volume:/asyncy
     ports:
-      - "8888:8084"
+      - "8084"
     environment:
       - logger_name=asyncy
       - logger_level=debug
