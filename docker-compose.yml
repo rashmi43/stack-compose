@@ -84,6 +84,29 @@ services:
       - ASYNCY_USER_ID=$ASYNCY_USER_ID
       - ENGINE_ADDR=engine:8084
 
+  rabbitmq:
+    image: asyncy/platform-rabbitmq
+    hostname: rabbitmq
+    ports:
+      - "4369"  # Peer discovery.
+      - "5672"  # Client.
+      - "5671"  # Client.
+      - "15672"  # Management UI.
+    networks:
+      - asyncy-backend
+
+  queue:
+    image: asyncy/platform-queue
+    hostname: queue
+    ports:
+      - "5000"
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+    networks:
+      - asyncy-backend
+    depends_on:
+      - rabbitmq
+
   engine:
     image: asyncy/platform-engine
     hostname: engine
@@ -100,6 +123,9 @@ services:
       - ASYNCY_USER_ID=$ASYNCY_USER_ID
     networks:
       - asyncy-backend
+    depends_on:
+      - gateway
+      - queue
 
   prometheus:
     image: asyncy/platform-prometheus
