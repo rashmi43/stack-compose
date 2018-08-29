@@ -63,7 +63,7 @@ services:
       - application-volume:/asyncy
 
   gateway:
-    image: asyncy/platform-gateway
+    image: asyncy/http
     hostname: gateway
     labels:
       - "traefik.tags=web"
