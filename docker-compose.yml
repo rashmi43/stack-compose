@@ -82,7 +82,6 @@ services:
       - SENTRY_DSN=$SENTRY_DSN_GATEWAY
       - ENVIRONMENT=alpha
       - ASYNCY_USER_ID=$ASYNCY_USER_ID
-      - ENGINE_ADDR=engine:8084
 
   rabbitmq:
     image: asyncy/platform-rabbitmq
@@ -121,6 +120,7 @@ services:
       - SENTRY_DSN=$SENTRY_DSN_ENGINE
       - ENVIRONMENT=alpha
       - ASYNCY_USER_ID=$ASYNCY_USER_ID
+      - ASYNCY_HTTP_GW_HOST=gateway
     networks:
       - asyncy-backend
     depends_on:
