@@ -3,8 +3,7 @@ version: "3.5"
 services:
 
   traefik:
-    image: traefik:v1.5.1-alpine
-    hostname: traefik
+    image: traefik:v1.6.6-alpine
     command:
       - --api
       - --docker
@@ -17,9 +16,10 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
       - /dev/null:/traefik.toml:rw
+      # - /etc/letsencrypt:/etc/letsencrypt
     ports:
       - "80:80"
-      - "8080:8080"
+      - "8080:8080"  # Traefik Frontend
       - "443:443"
     networks:
       - asyncy-frontend
@@ -27,84 +27,12 @@ services:
 
   bootstrap:
     image: asyncy/platform-bootstrap
-    hostname: bootstrap
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - application-volume:/asyncy
-    ports:
-      - "5000:5000"
-    networks:
-      - asyncy-backend
-    environment:
-      - ASSET_DIR=/asyncy
-      - SENTRY_DSN=$SENTRY_DSN_BOOTSTRAP
-      - ENVIRONMENT=alpha
-      - ASYNCY_USER_ID=$ASYNCY_USER_ID
-
-  git:
-    image: asyncy/platform-git-server
-    hostname: git
-    labels:
-      - "traefik.tags=web"
-      - "traefik.backend=git"
-      - "traefik.port=8888"
-      - "traefik.frontend.rule=Host: git.${DNS:-asyncy.net}"
-    ports:
-      - "8888"
-    networks:
-      - asyncy-frontend
-      - asyncy-backend
-    environment:
-      - DEPLOY_URL=http://bootstrap:5000/alpha/deploy
-      - SENTRY_DSN=$SENTRY_DSN_GIT
-      - ENVIRONMENT=alpha
-      - ASYNCY_USER_ID=$ASYNCY_USER_ID
-    volumes:
-      - application-volume:/asyncy
-
-  gateway:
-    image: asyncy/http
-    hostname: gateway
-    labels:
-      - "traefik.tags=web"
-      - "traefik.backend=gateway"
-      - "traefik.port=8888"
-      - "traefik.frontend.rule=Host: ${DNS:-asyncy.net}"
-    ports:
-      - "8888"
-      - "8889"
-    networks:
-      - asyncy-frontend
-      - asyncy-backend
-    volumes:
-      - application-volume:/asyncy
-    environment:
-      - SENTRY_DSN=$SENTRY_DSN_GATEWAY
-      - ENVIRONMENT=alpha
-      - ASYNCY_USER_ID=$ASYNCY_USER_ID
-
-  rabbitmq:
-    image: asyncy/platform-rabbitmq
-    hostname: rabbitmq
-    ports:
-      - "4369"  # Peer discovery.
-      - "5672"  # Client.
-      - "5671"  # Client.
-      - "15672"  # Management UI.
-    networks:
-      - asyncy-backend
-
-  queue:
-    image: asyncy/platform-queue
-    hostname: queue
-    ports:
-      - "5000"
-    environment:
-      - RABBITMQ_HOST=rabbitmq
-    networks:
-      - asyncy-backend
     depends_on:
-      - rabbitmq
+      - postgres
+    networks:
+      - asyncy-backend
+    environment:
+      - POSTGRES=yes
 
   engine:
     image: asyncy/platform-engine
@@ -117,79 +45,62 @@ services:
     environment:
       - logger_name=asyncy
       - logger_level=debug
-      - SENTRY_DSN=$SENTRY_DSN_ENGINE
-      - ENVIRONMENT=alpha
-      - ASYNCY_USER_ID=$ASYNCY_USER_ID
-      - ASYNCY_HTTP_GW_HOST=gateway
     networks:
       - asyncy-backend
-    depends_on:
-      - gateway
-      - queue
 
-  prometheus:
-    image: asyncy/platform-prometheus
-    hostname: prometheus
+  graphql:
+    image: asyncy/platform-graphql
     labels:
       - "traefik.tags=web"
-      - "traefik.backend=prometheus"
-      - "traefik.port=9090"
-      - "traefik.frontend.rule=Host: prometheus.${DNS:-asyncy.net}"
-    volumes:
-      - prometheus-volume:/prometheus
+      - "traefik.backend=graphql"
+      - "traefik.port=5000"
+      - "traefik.frontend.rule=Host: api.${DNS:-asyncy.net}; PathPrefix: /graphql, /graphiql, /_postgraphile"
+      - "traefik.frontend.headers.customResponseHeaders=Access-Control-Allow-Origin: *||Access-Control-Allow-Headers: Content-Type"
+    environment:
+      - ROOT_DATABASE_URL=postgres://postgres@postgres/postgres
+      - DATABASE_URL=postgres://asyncy_authenticator:PLEASE_CHANGE_ME@postgres/postgres
     ports:
-      - "9090"
+      - "5000"
+    depends_on:
+      - postgres
     networks:
+      - asyncy-frontend
       - asyncy-backend
 
-  grafana:
-    image: asyncy/platform-grafana
-    hostname: grafana
+  metabase:
+    image: metabase/metabase
     labels:
       - "traefik.tags=web"
-      - "traefik.backend=grafana"
+      - "traefik.backend=metabase"
       - "traefik.port=3000"
-      - "traefik.frontend.rule=Host: grafana.${DNS:-asyncy.net}"
+      - "traefik.frontend.rule=Host: metabase.${DNS:-asyncy.net}"
     ports:
       - "3000"
+    environment:
+      - MB_DB_FILE=/tmp/metabase.db
+    volumes:
+      - metabase-volume:/tmp
     networks:
       - asyncy-backend
-    volumes:
-      - grafana-volume:/var/lib/grafana
 
-  logspout:
-    image: gliderlabs/logspout:latest
-    hostname: logspout
-    networks:
-      - asyncy-logging
+  postgres:
+    image: postgres:10.3-alpine
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - "LOGDNA_INGESTION_KEY=${LOGDNA_INGESTION_KEY}"
-      - "SYSLOG_HOSTNAME='{{index .Container.Config.Labels \"com.docker.compose.project\"}}'"
-      - "SYSLOG_STRUCTURED_DATA='logdna@48950 tag=\"${ASYNCY_USER_ID}\""
-      - "SYSLOG_TAG='{{.Container.Config.Hostname}}'"
-    command:
-      syslog+tls://syslog-a.logdna.com:32443
-    deploy:
-      mode: global
-      resources:
-        limits:
-          cpus: '0.20'
-          memory: 256M
-        reservations:
-          cpus: '0.10'
-          memory: 128M
+      - postgres-volume:/var/lib/postgresql/data
+    ports:
+      - "5432"
+    networks:
+      - asyncy-backend
+
 
 volumes:
-  application-volume:
+  postgres-volume:
   prometheus-volume:
+  metabase-volume:
   grafana-volume:
 
 networks:
   asyncy-frontend:
     driver: bridge
   asyncy-backend:
-    driver: bridge
-  asyncy-logging:
     driver: bridge
